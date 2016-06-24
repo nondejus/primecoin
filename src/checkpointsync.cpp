@@ -156,6 +156,7 @@ bool WriteSyncCheckpoint(const uint256& hashCheckpoint)
         return error("WriteSyncCheckpoint(): failed to commit to txdb sync checkpoint %s", hashCheckpoint.ToString().c_str());
 
     hashSyncCheckpoint = hashCheckpoint;
+    hashConnectedBlock = hashCheckpoint;
     return true;
 }
 
