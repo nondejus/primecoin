@@ -30,19 +30,7 @@
 #include <ifaddrs.h>
 #endif
 
-#ifdef __sun__
-using std::map;
-#endif
-
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-
-#ifndef PRIO_MAX
-#define PRIO_MAX 20
-#endif
-
-#ifndef _WIN64
+#ifndef __MINGW64__
 typedef u_int SOCKET;
 #endif
 #ifdef WIN32

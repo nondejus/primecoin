@@ -15,7 +15,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #else
-#ifndef _WIN64
+#ifndef __MINGW64__
 typedef int pid_t; /* define for Windows compatibility */
 #else
 #include <sys/types.h>

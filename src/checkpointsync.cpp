@@ -216,6 +216,7 @@ uint256 AutoSelectSyncCheckpoint()
 }
 
 // Check against synchronized checkpoint
+// Use fast & non-full check from primecoin 0.16+
 bool CheckSyncCheckpoint(const uint256& hashBlock, const CBlockIndex* pindexPrev)
 {
     int nHeight = pindexPrev->nHeight + 1;

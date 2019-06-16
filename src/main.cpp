@@ -1877,14 +1877,6 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
             strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
     }
 
-    if (!IsSyncCheckpointEnforced()) // checkpoint advisory mode
-    {
-        if (pindexBest->pprev && !CheckSyncCheckpoint(pindexBest->GetBlockHash(), pindexBest->pprev))
-            strCheckpointWarning = _("Warning: checkpoint on different blockchain fork, contact developers to resolve the issue");
-        else
-            strCheckpointWarning = "";
-    }
-
     std::string strCmd = GetArg("-blocknotify", "");
 
     if (!fIsInitialDownload && !strCmd.empty())
@@ -2154,11 +2146,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         if (!Checkpoints::CheckBlock(nHeight, hash))
             return state.DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight));
 
-        // ppcoin: check that the block satisfies synchronized checkpoint
-        if (IsSyncCheckpointEnforced() // checkpoint enforce mode
-            && !CheckSyncCheckpoint(hash, pindexPrev))
-            return error("AcceptBlock() : rejected by synchronized checkpoint");
-
         // Primecoin: block version starts from 2
         if (nVersion < 2)
             return state.Invalid(error("AcceptBlock() : rejected nVersion=1 block"));
@@ -2203,9 +2190,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
             if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
                 pnode->PushInventory(CInv(MSG_BLOCK, hash));
     }
-
-    // ppcoin: check pending sync-checkpoint
-    AcceptPendingSyncCheckpoint();
 
     return true;
 }
@@ -2288,10 +2272,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         }
     }
 
-    // ppcoin: ask for pending sync-checkpoint if any
-    if (!IsInitialBlockDownload())
-        AskForPendingSyncCheckpoint(pfrom);
-
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
     {
@@ -2335,11 +2315,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     }
 
     printf("ProcessBlock: ACCEPTED\n");
-
-    // ppcoin: if responsible for sync-checkpoint send it
-    if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty() &&
-        (int)GetArg("-checkpointdepth", -1) >= 0)
-        SendSyncCheckpoint(AutoSelectSyncCheckpoint());
 
     return true;
 }
@@ -3238,10 +3213,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         return true;
     }
 
-
-
-
-
     if (strCommand == "version")
     {
         // Each connection can only send one version message
@@ -3338,22 +3309,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 item.second.RelayTo(pfrom);
         }
 
-        // ppcoin: relay sync-checkpoint
-        {
-            LOCK(cs_hashSyncCheckpoint);
-            if (!checkpointMessage.IsNull())
-                checkpointMessage.RelayTo(pfrom);
-        }
-
         pfrom->fSuccessfullyConnected = true;
 
         printf("receive version message: %s: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->cleanSubVer.c_str(), pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str());
 
         cPeerBlockCounts.input(pfrom->nStartingHeight);
 
-        // ppcoin: ask for pending sync-checkpoint if any
-        if (!IsInitialBlockDownload())
-            AskForPendingSyncCheckpoint(pfrom);
     }
 
 
@@ -3577,8 +3538,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         pfrom->PushMessage("headers", vHeaders);
     }
-
-
     else if (strCommand == "tx")
     {
         vector<uint256> vWorkQueue;
@@ -3758,22 +3717,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // a different signature key, etc.
                 pfrom->Misbehaving(10);
             }
-        }
-    }
-
-
-    else if (strCommand == "checkpoint") // ppcoin synchronized checkpoint
-    {
-        CSyncCheckpoint checkpoint;
-        vRecv >> checkpoint;
-
-        if (checkpoint.ProcessSyncCheckpoint(pfrom))
-        {
-            // Relay
-            pfrom->hashCheckpointKnown = checkpoint.hashCheckpoint;
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                checkpoint.RelayTo(pnode);
         }
     }
 

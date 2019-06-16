@@ -12,7 +12,7 @@
 const std::string CLIENT_NAME("Satoshi");
 
 // Client version number
-#define CLIENT_VERSION_SUFFIX   "-beta"
+#define CLIENT_VERSION_SUFFIX   ""
 
 // Special version string
 #define SPECIAL_VERSION_STR     "xpm-hp14"

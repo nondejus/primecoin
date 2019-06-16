@@ -1193,16 +1193,18 @@ void MapPort(bool)
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
-    {"primecoin.net", "seed.ppcoin.net"},
-    {"xpm.altcointech.net", "dnsseed.xpm.altcointech.net"},
-    {"xpm2.altcointech.net", "dnsseed.xpm2.altcointech.net"},
+    {"primecoin.info", "seed.primecoin.info"},
     {"primeseed.muuttuja.org", "primeseed.muuttuja.org"},
+    {"primecoin.org", "seed.primecoin.org"},
+    {"coinsforall.io", "xpm.dnsseed.coinsforall.io"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
-    {"primecoin.net", "tnseed.ppcoin.net"},
+    {"primecoin.info", "testseed.primecoin.info"},
     {"primeseedtn.muuttuja.org", "primeseedtn.muuttuja.org"},
+    {"primecoin.org", "seed.testnet.primecoin.org"},
+    {"coinsforall.io", "xpmtestnet.dnsseed.coinsforall.io"},
     {NULL, NULL}
 };
 
@@ -1674,13 +1676,18 @@ bool BindListenPort(const CService &addrBind, string& strError)
     if (addrBind.IsIPv6()) {
 #ifdef IPV6_V6ONLY
 #ifdef WIN32
+        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&nOne, sizeof(int));
+#else
+        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&nOne, sizeof(int));
+#endif
+#endif
+#ifdef WIN32
         int nProtLevel = 10 /* PROTECTION_LEVEL_UNRESTRICTED */;
         int nParameterId = 23 /* IPV6_PROTECTION_LEVEl */;
         // this call is allowed to fail
         setsockopt(hListenSocket, IPPROTO_IPV6, nParameterId, (const char*)&nProtLevel, sizeof(int));
 #else
         setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&nOne, sizeof(int));
-#endif
 #endif
     }
 #endif
