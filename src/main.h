@@ -1645,6 +1645,9 @@ public:
     // pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
 
+    // pointer to the index of some further predecessor of this block
+    CBlockIndex* pskip;
+
     // (memory only) pointer to the index of the *active* successor of this block
     CBlockIndex* pnext;
 
@@ -1690,6 +1693,7 @@ public:
     {
         phashBlock = NULL;
         pprev = NULL;
+        pskip = NULL;
         pnext = NULL;
         nHeight = 0;
         nFile = 0;
@@ -1717,6 +1721,7 @@ public:
         phashBlock = NULL;
         pprev = NULL;
         pnext = NULL;
+        pskip = NULL;
         nHeight = 0;
         nFile = 0;
         nDataPos = 0;
@@ -1841,6 +1846,13 @@ public:
     {
         printf("%s\n", ToString().c_str());
     }
+
+    // Build the skiplist pointer for this entry.
+    void BuildSkip();
+
+    // Efficiently find an ancestor of this block.
+    CBlockIndex* GetAncestor(int height);
+    const CBlockIndex* GetAncestor(int height) const;
 };
 
 struct CBlockIndexWorkComparator
