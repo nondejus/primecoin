@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 Primecoin High Performance Version
 ==================================
 
