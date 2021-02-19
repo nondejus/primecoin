@@ -100,4 +100,4 @@ Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
 Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
 
-See https://github.com/bitcoin/QA/ for how to create a test plan.
+See https://github.com/bitcoin for how to create a test plan.
